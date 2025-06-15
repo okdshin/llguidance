@@ -6,11 +6,9 @@ use toktrie::{TokEnv, TokRxInfo, TokTrie, TokenId, TokenizerEnv};
 
 pub struct PyPLaMo2Tokenizer {
     py_tokenizer: PyObject,
-    vocab_size: usize,
     
     // TokTrie integration
     tok_trie: TokTrie,
-    info: TokRxInfo,
 }
 
 impl PyPLaMo2Tokenizer {
@@ -26,9 +24,7 @@ impl PyPLaMo2Tokenizer {
             
             Ok(PyPLaMo2Tokenizer {
                 py_tokenizer,
-                vocab_size,
                 tok_trie,
-                info,
             })
         })
     }
@@ -81,14 +77,14 @@ impl PyPLaMo2Tokenizer {
         }
         
         // Extract special token IDs
-        let info = TokRxInfo {
-            vocab_size: vocab_size as u32,
-            tok_eos: Self::get_special_token_id(py, py_tokenizer, "eos_token_id").unwrap_or(0),
-            tok_bos: Self::get_special_token_id(py, py_tokenizer, "bos_token_id"),
-            tok_unk: Self::get_special_token_id(py, py_tokenizer, "unk_token_id"),
-            tok_pad: Self::get_special_token_id(py, py_tokenizer, "pad_token_id"),
-            tok_end_of_turn: None,
-        };
+        let mut info = TokRxInfo::new(
+            vocab_size as u32,
+            Self::get_special_token_id(py, py_tokenizer, "eos_token_id").unwrap_or(0),
+        );
+        info.tok_bos = Self::get_special_token_id(py, py_tokenizer, "bos_token_id");
+        info.tok_unk = Self::get_special_token_id(py, py_tokenizer, "unk_token_id");
+        info.tok_pad = Self::get_special_token_id(py, py_tokenizer, "pad_token_id");
+        info.tok_end_of_turn = None;
         
         Ok((info, token_bytes))
     }
