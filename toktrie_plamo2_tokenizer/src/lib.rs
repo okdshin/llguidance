@@ -1,9 +1,8 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyList, PyString};
+use pyo3::types::PyList;
 use std::sync::Arc;
 use toktrie::{TokEnv, TokRxInfo, TokTrie, TokenId, TokenizerEnv};
-use log::warn;
 
 pub struct PyPLaMo2Tokenizer {
     py_tokenizer: PyObject,
@@ -45,7 +44,7 @@ impl PyPLaMo2Tokenizer {
             let py_tokenizer = tokenizer_class.call1((vocab_file,))?;
             
             // Use the from_python_object method
-            Self::from_python_object(py_tokenizer.to_object(py))
+            Self::from_python_object(py_tokenizer.into())
         })
     }
     
@@ -85,9 +84,9 @@ impl PyPLaMo2Tokenizer {
         let info = TokRxInfo {
             vocab_size: vocab_size as u32,
             tok_eos: Self::get_special_token_id(py, py_tokenizer, "eos_token_id").unwrap_or(0),
-            tok_bos: Self::get_special_token_id(py, py_tokenizer, "bos_token_id").unwrap_or(0),
-            tok_unk: Self::get_special_token_id(py, py_tokenizer, "unk_token_id").unwrap_or(0),
-            tok_pad: Self::get_special_token_id(py, py_tokenizer, "pad_token_id").unwrap_or(0),
+            tok_bos: Self::get_special_token_id(py, py_tokenizer, "bos_token_id"),
+            tok_unk: Self::get_special_token_id(py, py_tokenizer, "unk_token_id"),
+            tok_pad: Self::get_special_token_id(py, py_tokenizer, "pad_token_id"),
             tok_end_of_turn: None,
         };
         
@@ -109,14 +108,17 @@ impl PyPLaMo2Tokenizer {
     pub fn encode(&self, text: &str) -> Result<Vec<u32>> {
         Python::with_gil(|py| {
             let result = self.py_tokenizer.call_method1(py, "_tokenize", (text,))?;
-            let token_list: Bound<'_, PyList> = result.downcast_bound(py)?;
+            let token_list = result.downcast_bound::<PyList>(py)
+                .map_err(|e| anyhow::anyhow!("Failed to downcast to PyList: {}", e))?;
             
             let mut token_ids = Vec::new();
-            for token in token_list {
-                let token_str: String = token.extract()?;
+            for token in token_list.iter() {
+                let token_str: String = token.extract()
+                    .map_err(|e| anyhow::anyhow!("Failed to extract token string: {}", e))?;
                 let token_id: u32 = self.py_tokenizer
                     .call_method1(py, "_convert_token_to_id", (&token_str,))?
-                    .extract(py)?;
+                    .extract(py)
+                    .map_err(|e| anyhow::anyhow!("Failed to extract token ID: {}", e))?;
                 token_ids.push(token_id);
             }
             
@@ -126,9 +128,10 @@ impl PyPLaMo2Tokenizer {
     
     pub fn decode(&self, token_ids: &[u32]) -> Result<String> {
         Python::with_gil(|py| {
-            let py_list = PyList::new_bound(py, token_ids);
-            let result = self.py_tokenizer.call_method1(py, "decode", (py_list,))?;
-            let decoded: String = result.extract(py)?;
+            let py_list = PyList::new(py, token_ids)?;
+            let result = self.py_tokenizer.call_method1(py, "decode", (&py_list,))?;
+            let decoded: String = result.extract(py)
+                .map_err(|e| anyhow::anyhow!("Failed to extract decoded string: {}", e))?;
             Ok(decoded)
         })
     }
@@ -149,13 +152,13 @@ impl TokenizerEnv for PyPLaMo2TokenizerEnv {
     
     fn tokenize_bytes(&self, s: &[u8]) -> Vec<TokenId> {
         match String::from_utf8(s.to_vec()) {
-            Ok(text) => self.tokenizer.encode(&text).unwrap_or_else(|_| {
-                // Last resort: byte-by-byte encoding
-                s.iter().enumerate().map(|(i, _)| i as u32).collect()
+            Ok(text) => self.tokenizer.encode(&text).unwrap_or_else(|e| {
+                eprintln!("PLaMo2 tokenization error: {}", e);
+                Vec::new()
             }),
             Err(_) => {
-                // Handle invalid UTF-8 by encoding each byte
-                s.iter().enumerate().map(|(i, _)| i as u32).collect()
+                // Handle invalid UTF-8: return empty vector
+                Vec::new()
             }
         }
     }
