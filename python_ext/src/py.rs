@@ -139,7 +139,7 @@ impl LLTokenizer {
         py_tokenizer: PyObject,
         slices: Option<Vec<String>>,
     ) -> PyResult<Self> {
-        let tok_env = toktrie_plamo2_tokenizer::lltokenizer_from_plamo2_tokenizer(py_tokenizer)
+        let tok_env = toktrie_plamo2_tokenizer::tokenv_from_plamo2_tokenizer(py_tokenizer)
             .map_err(val_error)?;
 
         let factory = ParserFactory::new(

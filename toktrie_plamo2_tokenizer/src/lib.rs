@@ -161,7 +161,7 @@ impl TokenizerEnv for PyPLaMo2TokenizerEnv {
 }
 
 /// Public function to create LLTokenizer from Python Plamo2Tokenizer
-pub fn lltokenizer_from_plamo2_tokenizer(py_tokenizer: PyObject) -> Result<TokEnv> {
+pub fn tokenv_from_plamo2_tokenizer(py_tokenizer: PyObject) -> Result<TokEnv> {
     let tokenizer = PyPLaMo2Tokenizer::from_python_object(py_tokenizer)?;
     Ok(tokenizer.to_env())
 }
