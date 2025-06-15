@@ -134,18 +134,13 @@ impl LLTokenizer {
     }
 
     #[staticmethod]
-    #[pyo3(signature = ())]
+    #[pyo3(signature = (py_tokenizer, slices=None))]
     fn from_plamo2_tokenizer(
+        py_tokenizer: PyObject,
+        slices: Option<Vec<String>>,
     ) -> PyResult<Self> {
-        let bpe = TikTokenBPE::new(
-            encoder.into_iter().collect(),
-            special_tokens.into_iter().collect(),
-            pattern,
-            n_vocab,
-            eos_token,
-        )
-        .map_err(val_error)?;
-        let tok_env = bpe.to_env();
+        let tok_env = toktrie_plamo2_tokenizer::lltokenizer_from_plamo2_tokenizer(py_tokenizer)
+            .map_err(val_error)?;
 
         let factory = ParserFactory::new(
             &tok_env,

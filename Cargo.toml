@@ -9,6 +9,7 @@ members = [
     "toktrie_hf_downloader",
     "toktrie_tiktoken",
     "toktrie_plamo2_tokenizer",
+    "toktrie_generic_py_tokenizer",
 ]
 # just exclude python_ext since it doesn't build without maturin
 default-members = [
@@ -20,6 +21,7 @@ default-members = [
     "toktrie_hf_downloader",
     "toktrie_tiktoken",
     "toktrie_plamo2_tokenizer",
+    "toktrie_generic_py_tokenizer",
 ]
 resolver = "2"
 
@@ -43,3 +45,4 @@ toktrie_hf_tokenizers = { path = "toktrie_hf_tokenizers" }
 toktrie_hf_downloader = { path = "toktrie_hf_downloader" }
 toktrie_tiktoken = { path = "toktrie_tiktoken" }
 toktrie_plamo2_tokenizer = { path = "toktrie_plamo2_tokenizer" }
+pyo3 = "0.24.1"

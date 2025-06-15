@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyList, PyString};
 use std::sync::Arc;
 use toktrie::{TokEnv, TokRxInfo, TokTrie, TokenId, TokenizerEnv};
+use log::warn;
 
 pub struct PyPLaMo2Tokenizer {
     py_tokenizer: PyObject,
@@ -108,7 +109,7 @@ impl PyPLaMo2Tokenizer {
     pub fn encode(&self, text: &str) -> Result<Vec<u32>> {
         Python::with_gil(|py| {
             let result = self.py_tokenizer.call_method1(py, "_tokenize", (text,))?;
-            let token_list: &PyList = result.downcast(py)?;
+            let token_list: Bound<'_, PyList> = result.downcast_bound(py)?;
             
             let mut token_ids = Vec::new();
             for token in token_list {
@@ -125,7 +126,7 @@ impl PyPLaMo2Tokenizer {
     
     pub fn decode(&self, token_ids: &[u32]) -> Result<String> {
         Python::with_gil(|py| {
-            let py_list = PyList::new(py, token_ids);
+            let py_list = PyList::new_bound(py, token_ids);
             let result = self.py_tokenizer.call_method1(py, "decode", (py_list,))?;
             let decoded: String = result.extract(py)?;
             Ok(decoded)
@@ -158,4 +159,10 @@ impl TokenizerEnv for PyPLaMo2TokenizerEnv {
             }
         }
     }
+}
+
+/// Public function to create LLTokenizer from Python Plamo2Tokenizer
+pub fn lltokenizer_from_plamo2_tokenizer(py_tokenizer: PyObject) -> Result<TokEnv> {
+    let tokenizer = PyPLaMo2Tokenizer::from_python_object(py_tokenizer)?;
+    Ok(tokenizer.to_env())
 }

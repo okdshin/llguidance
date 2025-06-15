@@ -1240,6 +1240,7 @@ dependencies = [
  "serde",
  "serde_json",
  "toktrie_hf_tokenizers",
+ "toktrie_plamo2_tokenizer",
  "toktrie_tiktoken",
 ]
 
@@ -2405,6 +2406,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "toktrie_generic_py_tokenizer"
+version = "0.7.29"
+dependencies = [
+ "anyhow",
+ "log",
+ "serde",
+ "serde_json",
+ "toktrie",
+]
+
+[[package]]
 name = "toktrie_hf_downloader"
 version = "0.7.29"
 dependencies = [
@@ -2424,6 +2436,18 @@ dependencies = [
  "serde",
  "serde_json",
  "tokenizers",
+ "toktrie",
+]
+
+[[package]]
+name = "toktrie_plamo2_tokenizer"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "log",
+ "pyo3",
+ "serde",
+ "serde_json",
  "toktrie",
 ]
 
