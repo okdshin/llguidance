@@ -133,6 +133,31 @@ impl LLTokenizer {
         })
     }
 
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    fn from_plamo2_tokenizer(
+    ) -> PyResult<Self> {
+        let bpe = TikTokenBPE::new(
+            encoder.into_iter().collect(),
+            special_tokens.into_iter().collect(),
+            pattern,
+            n_vocab,
+            eos_token,
+        )
+        .map_err(val_error)?;
+        let tok_env = bpe.to_env();
+
+        let factory = ParserFactory::new(
+            &tok_env,
+            InferenceCapabilities::default(),
+            &slices.unwrap_or_else(SlicedBiasComputer::general_slices),
+        )
+        .map_err(val_error)?;
+        Ok(LLTokenizer {
+            factory: Arc::new(factory),
+        })
+    }
+
     fn with_slices(&self, slices: Vec<String>) -> PyResult<Self> {
         let factory = self.factory.with_slices(&slices)?;
         Ok(LLTokenizer {

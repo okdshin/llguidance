@@ -10,6 +10,7 @@ repository = "https://github.com/guidance-ai/llguidance"
 llguidance = { workspace = true }
 toktrie_hf_tokenizers = { workspace = true }
 toktrie_tiktoken = { workspace = true }
+toktrie_plamo2_tokenizer = { workspace = true }
 bytemuck = "1.21.0"
 pyo3 = {version = "0.24.1", features = ["extension-module", "abi3-py39", "anyhow"]}
 serde = { version = "1.0.217", features = ["derive"] }

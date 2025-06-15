@@ -11,7 +11,7 @@ auto_commit = ["CHANGELOG.md"]
 pyproject_path = "pyproject.toml"
 cargo_paths = [
     "parser", "python_ext", "toktrie", "toktrie_hf_tokenizers",
-    "toktrie_tiktoken", "toktrie_hf_downloader"
+    "toktrie_tiktoken", "toktrie_hf_downloader", "toktrie_plamo2_tokenizer"
 ]
 version_pattern = r'\nversion\s*=\s*"(\d+\.\d+\.\d+)([^"]*)"'
 
