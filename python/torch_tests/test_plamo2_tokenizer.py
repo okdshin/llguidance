@@ -1,8 +1,7 @@
 import json
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import List, Optional
 
-import numpy as np
 import pytest
 import torch
 from transformers import AutoTokenizer
@@ -10,9 +9,8 @@ from transformers import AutoTokenizer
 import llguidance.plamo2_tokenizer
 from llguidance import LLExecutor, LLMatcher, LLTokenizer
 from llguidance.torch import (allocate_token_bitmask,
-                              apply_token_bitmask_inplace,
                               fill_next_token_bitmask,
-                              fill_next_token_bitmask_par, get_bitmask_shape)
+                              fill_next_token_bitmask_par)
 
 
 def _build_tokenizer() -> LLTokenizer:
