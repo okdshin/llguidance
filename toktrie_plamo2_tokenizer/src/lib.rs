@@ -146,6 +146,17 @@ impl TokenizerEnv for PyPLaMo2TokenizerEnv {
         &self.tokenizer.tok_trie
     }
     
+    fn find_byte_token(&self, byte: u8) -> Option<TokenId> {
+        Python::with_gil(|py| {
+            let byte_token = format!("<0x{:02X}>", byte);
+            self.tokenizer.py_tokenizer
+                .call_method1(py, "_convert_token_to_id", (&byte_token,))
+                .ok()?
+                .extract::<u32>(py)
+                .ok()
+        })
+    }
+    
     fn tokenize_bytes(&self, s: &[u8]) -> Vec<TokenId> {
         match String::from_utf8(s.to_vec()) {
             Ok(text) => self.tokenizer.encode(&text).unwrap_or_else(|e| {
@@ -153,8 +164,21 @@ impl TokenizerEnv for PyPLaMo2TokenizerEnv {
                 Vec::new()
             }),
             Err(_) => {
-                // Handle invalid UTF-8: return empty vector
-                Vec::new()
+                // Handle invalid UTF-8 by tokenizing individual bytes
+                let mut result = Vec::new();
+                for &byte in s {
+                    // Look for byte token in format <0xXX>
+                    let byte_token = format!("<0x{:02X}>", byte);
+                    if let Ok(token_ids) = self.tokenizer.encode(&byte_token) {
+                        result.extend(token_ids);
+                    } else {
+                        // If byte token doesn't exist, try to find it in vocab
+                        if let Some(token_id) = self.find_byte_token(byte) {
+                            result.push(token_id);
+                        }
+                    }
+                }
+                result
             }
         }
     }
